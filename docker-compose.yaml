@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  zig-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/project
+    command: ["zig", "build"]
+
