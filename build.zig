@@ -1,14 +1,12 @@
 const std = @import("std");
 
 pub fn build(b: *std.build.Builder) void {
-    // Set up the target. This assumes an ARM Cortex-M4.
     const target = std.zig.CrossTarget{
         .cpu_arch = .arm,
         .os_tag = .freestanding,
-        .abi = .eabihf, // THis for hard float: gnueabihf
+        .abi = .eabihf, // for hard float: gnueabihf
     };
 
-    // Create an executable for the target.
     const optimize = b.standardOptimizeOption(.{});
     var exe_options = std.build.ExecutableOptions{
         .name = "Temp",
@@ -39,14 +37,14 @@ pub fn build(b: *std.build.Builder) void {
         "startup_stm32f401xe.s",
     };
 
-    // Include ASM source files in the build
     exe.addCSourceFiles(asm_sources, &.{
         "-x",               "assembler-with-cpp",
         "-mcpu=cortex-m4",  "-mfpu=fpv4-sp-d16",
         "-mfloat-abi=hard", "-mthumb",
     });
 
-    // Set CPU, FPU, and float-ABI options
+    // C Flags
+    // @!TODO: FIX
     exe.addCDefine("USE_HAL_DRIVER", "");
     exe.addCDefine("STM32F401xE", "");
     exe.addCFlags(&.{
@@ -65,12 +63,6 @@ pub fn build(b: *std.build.Builder) void {
         exe.addCFlags(&.{ "-g", "-gdwarf-2" });
     }
 
-    // Debug flags
-    if (b.standardReleaseOptions().build_mode == .Debug) {
-        exe.addCFlag("-g");
-        exe.addCFlag("-gdwarf-2");
-    }
-
     // Setup linker script and flags.
     exe.setLinkerScriptPath("STM32F401RETx_FLASH.ld");
     exe.addLinkerFlags(&.{
@@ -87,10 +79,9 @@ pub fn build(b: *std.build.Builder) void {
 
     // Setup the output directory.
     const out_dir = "build";
-    exe.setOutputDir(out_dir);
+    exe.setOutputDir(out_dir); // Doesnt work
 
-    // Generate .hex and .bin files post-build.
-    const elf_path = exe.getOutputPath();
+    const elf_path = exe.getOutputPath(); // Doesnt work
     const hex_step = b.addSystemCommand(&.{
         "arm-none-eabi-objcopy", "-O", "ihex", elf_path, "${out_dir}/Temp.hex",
     });
@@ -98,11 +89,9 @@ pub fn build(b: *std.build.Builder) void {
         "arm-none-eabi-objcopy", "-O", "binary", elf_path, "${out_dir}/Temp.bin",
     });
 
-    // Set default build step dependencies.
     b.default_step.dependOn(&hex_step.step);
     b.default_step.dependOn(&bin_step.step);
 
-    // Optionally, add a clean step to remove the build directory.
     const clean = b.addStep("clean", "Clean up build artifacts", .{});
     clean.dependOn(&b.fs.deletePath(out_dir, .{}));
 }
