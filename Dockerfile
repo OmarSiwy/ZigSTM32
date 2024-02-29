@@ -2,7 +2,7 @@ FROM archlinux:base-devel
 
 ARG TOOLS_PATH=/opt/gcc-arm-none-eabi
 ARG ARM_VERSION=12.3.rel1
-ARG ZIG_VERSION=0.10.0
+ARG ZIG_VERSION=0.11.0
 
 RUN pacman -Syu --noconfirm --needed \
   base-devel \
